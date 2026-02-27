@@ -9,6 +9,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Automated test suite** using `@vscode/test-electron` and Mocha (`tdd` UI), runnable via `npm test`.
+- **Unit tests for `util.ts`**: `contentHash` (hex format, determinism, key separation), `truncate` (boundary, ellipsis, whitespace collapse), `languageLabel` (all 13 known mappings + fallback).
+- **Unit tests for `isNoiseLine`**: 35 cases covering blank lines, pure-punctuation, single-line comments (`//`, `#`, `--`, `%%`, `;`), block-comment lines, structural keywords, import/using/require/include directives, and XAML closing tags.
+- **Unit tests for `isGeneratedFile`**: 16 cases covering all guarded extensions and normal files.
+- **Integration tests for `SourceDocCodeLensProvider`**: generated-file guard, disabled state, all five modes, fixture-file lens count, `refresh()` event.
+- **Integration tests for `DecorationManager`**: store/retrieve, multi-line independence, overwrite, `clearForEditor`, `clearAll`, and auto-clear on live document edit.
+- **Mock-based tests for `ExplanationProvider`**: cache hit (model called once), separate code/language keys, `invalidateCache()`, no-model error message, `LanguageModelError` wrapping, pre-cancelled token, streamed chunk assembly.
+- **Tests for `explainFile` command**: command registration, noise-line filtering, parallel execution via mocked `vscode.lm`, cancellation propagation, and error aggregation via `Promise.allSettled`.
+- `src/test/fixtures/sample.ts` — controlled TypeScript fixture with functions, classes, interfaces, arrow functions, and noise lines.
+
+---
+
+## [0.2.1] — 2026-02-27
+
+### Changed
+
+- Split CI workflow into `ci.yml` (branch/PR builds) and `release.yml` (tag-triggered Marketplace publish) to fix publish job not triggering.
+- Updated extension icon to a professional dark-card design with cyan highlighted code line and ghost-text tail.
+- Added `scripts/gen-icon.js` to regenerate the icon without external dependencies.
+
 ---
 
 ## [0.2.0] — 2026-02-27
@@ -48,6 +70,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **CI workflow** (GitHub Actions): compile + type-check on Ubuntu & Windows for every push and PR; VSIX packaging on pushes to `main`.
 - `CONTRIBUTING.md` with setup guide, coding conventions, and instructions for adding new language support.
 
-[Unreleased]: https://github.com/moonolgerd/source-doc/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/moonolgerd/source-doc/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/moonolgerd/source-doc/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/moonolgerd/source-doc/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/moonolgerd/source-doc/releases/tag/v0.1.0

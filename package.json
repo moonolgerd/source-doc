@@ -2,7 +2,7 @@
   "name": "source-doc",
   "displayName": "Source Doc",
   "description": "Explains source code line-by-line or block-by-block or full file via CodeLens markers, powered by GitHub Copilot.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "moonolgerd",
   "repository": {
     "type": "git",
@@ -21,8 +21,19 @@
   "engines": {
     "vscode": "^1.90.0"
   },
-  "categories": ["Programming Languages", "Other"],
-  "keywords": ["codelens", "explain", "copilot", "ai", "documentation", "inline", "ghost text"],
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "codelens",
+    "explain",
+    "copilot",
+    "ai",
+    "documentation",
+    "inline",
+    "ghost text"
+  ],
   "activationEvents": [
     "onStartupFinished",
     "onLanguage:typescript",
@@ -76,7 +87,13 @@
         },
         "sourceDoc.mode": {
           "type": "string",
-          "enum": ["line", "block", "both", "file", "none"],
+          "enum": [
+            "line",
+            "block",
+            "both",
+            "file",
+            "none"
+          ],
           "enumDescriptions": [
             "Show a CodeLens on every non-empty line.",
             "Show a CodeLens on every function, class, and method.",
@@ -89,8 +106,17 @@
         },
         "sourceDoc.languages": {
           "type": "array",
-          "items": { "type": "string" },
-          "default": ["typescript", "typescriptreact", "javascript", "javascriptreact", "csharp", "xaml"],
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "typescript",
+            "typescriptreact",
+            "javascript",
+            "javascriptreact",
+            "csharp",
+            "xaml"
+          ],
           "description": "Language IDs for which Source Doc CodeLens markers are shown."
         },
         "sourceDoc.modelFamily": {
@@ -112,11 +138,18 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "lint": "eslint src --ext ts"
+    "lint": "eslint src --ext ts",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTests.js"
   },
   "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.90.0",
+    "@vscode/test-electron": "^2.5.2",
+    "glob": "^11.1.0",
+    "mocha": "^10.8.2",
     "typescript": "^5.4.0"
   }
 }

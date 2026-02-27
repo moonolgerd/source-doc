@@ -81,14 +81,14 @@ description: Implementation task list for the Source Doc VS Code extension
   - [x] `CHANGELOG.md` following Keep a Changelog / SemVer.
   - [x] GitHub Actions CI: compile + type-check on Ubuntu & Windows; VSIX packaging on push.
 
-- [ ] <!-- task:T11 --> Add automated tests
-  - [ ] Set up `@vscode/test-electron` harness.
-  - [ ] Unit-test `util.ts` (`contentHash`, `truncate`, `languageLabel`).
-  - [ ] Unit-test `isNoiseLine` and `isGeneratedFile` helpers.
-  - [ ] Integration-test `SourceDocCodeLensProvider` with a fixture TypeScript file.
-  - [ ] Integration-test `DecorationManager` decoration application and auto-clear.
-  - [ ] Mock `vscode.lm` to test `ExplanationProvider` cache and error paths.
-  - [ ] Test `explainFile` parallel execution and cancellation.
+- [x] <!-- task:T11 --> Add automated tests
+  - [x] Set up `@vscode/test-electron` harness.
+  - [x] Unit-test `util.ts` (`contentHash`, `truncate`, `languageLabel`).
+  - [x] Unit-test `isNoiseLine` and `isGeneratedFile` helpers.
+  - [x] Integration-test `SourceDocCodeLensProvider` with a fixture TypeScript file.
+  - [x] Integration-test `DecorationManager` decoration application and auto-clear.
+  - [x] Mock `vscode.lm` to test `ExplanationProvider` cache and error paths.
+  - [x] Test `explainFile` parallel execution and cancellation.
 
 - [x] <!-- task:T13 --> Noise filtering, generated-file guard, hover tooltip
   - [x] `isNoiseLine(trimmed, languageId)` — suppress CodeLens on empty, no-word-char, comment, import/using, and structural-keyword lines (`try`/`finally`/`else`/`do`).
@@ -111,4 +111,4 @@ description: Implementation task list for the Source Doc VS Code extension
   - [x] Add `LICENSE` (MIT) and `images/icon.png` (128×128 programmatically generated PNG).
   - [x] Update `.vscodeignore` to exclude `.github/`, `.copilot-specs-cache/`, `CONTRIBUTING.md` from VSIX.
   - [x] Run `vsce package --no-dependencies` — produces `source-doc-0.1.0.vsix` (19 files, 24 KB, no warnings).
-  - [ ] Publish via `vsce publish` — requires a Personal Access Token from the VS Code Marketplace publisher portal.
+  - [x] Publish via `vsce publish` — requires a Personal Access Token from the VS Code Marketplace publisher portal.
