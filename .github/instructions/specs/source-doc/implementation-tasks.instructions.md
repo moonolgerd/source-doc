@@ -34,12 +34,16 @@ description: Implementation task list for the Source Doc VS Code extension
 
 - [x] <!-- task:T5 --> Implement `src/codeLensProvider.ts`
   - [x] `SourceDocCodeLensProvider` implementing `vscode.CodeLensProvider` with `onDidChangeCodeLenses` event.
-  - [x] `provideCodeLenses(document)` — branch on `sourceDoc.mode` (`block` / `line` / `both`).
+  - [x] `provideCodeLenses(document)` — branch on `sourceDoc.mode` (`block` / `line` / `both` / `file` / `none`).
+  - [x] Return `[]` immediately for generated files (`isGeneratedFile`) or when `mode === 'none'`.
+  - [x] Always add a file-level `$(comment) Explain file` CodeLens at line 0 (for all modes except `none`).
   - [x] Block mode (symbol-based): `vscode.executeDocumentSymbolProvider`; recurse into `sym.children`; filter to 9 relevant `SymbolKind` values.
   - [x] Regex fallback when symbol provider returns `[]`: `regexBlockLenses()` with separate code and XAML/XML regexes.
   - [x] XAML context gathering: collect up to 30 lines until closing/self-closing tag.
   - [x] `scheduleRetry()` — debounced 2.5 s `setTimeout` that fires `_onDidChangeCodeLenses`.
-  - [x] Line mode: iterate `document.lineCount`, skip blank lines.
+  - [x] Line mode: iterate `document.lineCount`, skip noise lines via `isNoiseLine`.
+  - [x] File mode: only the file-level lens, no per-line/per-block lenses.
+  - [x] Exported top-level `isNoiseLine(trimmed, languageId)` and `isGeneratedFile(document)` helpers.
   - [x] Fire refresh on `sourceDoc.enabled` / `sourceDoc.mode` config changes, `onDidChangeActiveTextEditor`, `onDidOpenTextDocument`.
   - [x] Public `refresh()` method for the `sourceDoc.refreshLenses` command.
 
@@ -53,8 +57,11 @@ description: Implementation task list for the Source Doc VS Code extension
   - [x] `activate()`: instantiate all four classes, push to `context.subscriptions`.
   - [x] `registerCodeLensProviders()`: read `sourceDoc.languages`, call `vscode.languages.registerCodeLensProvider` per language.
   - [x] Dynamic re-registration on `sourceDoc.languages` config change.
-  - [x] Register 5 commands: `explainLine`, `explainBlock`, `toggleMode`, `clearExplanations`, `refreshLenses`.
+  - [x] Register 6 commands: `explainLine`, `explainBlock`, `explainFile`, `toggleMode`, `clearExplanations`, `refreshLenses`.
   - [x] `runExplain()`: reconstruct `vscode.Uri` from JSON-serialised args; find editor; show cancellable progress; call `ExplanationProvider`; apply via `DecorationManager`.
+  - [x] `explainFile` command: collect non-noise lines; explain all in parallel via `Promise.allSettled`; apply decorations as each resolves; progress shows `N / total done`; aggregate errors shown as single message.
+  - [x] Hover provider registered for `{ scheme: 'file' }` — returns full explanation when `DecorationManager.getFullExplanation()` indicates text was truncated.
+  - [x] `toggleMode` cycles `block → line → both → file → none → block`.
   - [x] `deactivate()`: no-op (subscriptions handle cleanup).
 
 - [x] <!-- task:T8 --> Fix activation and lens visibility issues
@@ -77,9 +84,26 @@ description: Implementation task list for the Source Doc VS Code extension
 - [ ] <!-- task:T11 --> Add automated tests
   - [ ] Set up `@vscode/test-electron` harness.
   - [ ] Unit-test `util.ts` (`contentHash`, `truncate`, `languageLabel`).
+  - [ ] Unit-test `isNoiseLine` and `isGeneratedFile` helpers.
   - [ ] Integration-test `SourceDocCodeLensProvider` with a fixture TypeScript file.
   - [ ] Integration-test `DecorationManager` decoration application and auto-clear.
   - [ ] Mock `vscode.lm` to test `ExplanationProvider` cache and error paths.
+  - [ ] Test `explainFile` parallel execution and cancellation.
+
+- [x] <!-- task:T13 --> Noise filtering, generated-file guard, hover tooltip
+  - [x] `isNoiseLine(trimmed, languageId)` — suppress CodeLens on empty, no-word-char, comment, import/using, and structural-keyword lines (`try`/`finally`/`else`/`do`).
+  - [x] `isGeneratedFile(document)` — skip `*.d.ts`, `*.g.cs`, `*.g.i.cs`, `*.generated.*`, `*.designer.cs`, `*.min.js/css/mjs`, `*.pb.go`, `assemblyinfo.cs`.
+  - [x] `DecorationManager` tracks `fullMap` alongside `displayMap`; `getFullExplanation(uri, line)` exposed for hover.
+  - [x] Hover provider in `extension.ts` shows full text when ghost text is truncated.
+  - [x] Copilot prompt revised: max 20 words, start with verb, no language name, no "this code" boilerplate.
+
+- [x] <!-- task:T14 --> Explain file command + file/none modes
+  - [x] `sourceDoc.explainFile` command: collect non-noise lines, explain all concurrently via `Promise.allSettled`, apply decorations as results arrive, cancellable progress `N / total done`.
+  - [x] `ExplainMode` extended to `'line' | 'block' | 'both' | 'file' | 'none'`.
+  - [x] `file` mode: only file-level lens at line 0; no per-line or per-block lenses.
+  - [x] `none` mode: no lenses at all.
+  - [x] `SourceDocStatusBar` updated with `$(file)` and `$(circle-slash)` icons for new modes.
+  - [x] `package.json` `sourceDoc.mode` enum updated with `file` and `none` entries.
 
 - [x] <!-- task:T12 --> Publish to VS Code Marketplace
   - [x] Add `publisher`, `repository`, `icon`, `categories`, `bugs`, `homepage`, `galleryBanner`, `license` to `package.json`.

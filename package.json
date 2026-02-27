@@ -1,8 +1,8 @@
 {
   "name": "source-doc",
   "displayName": "Source Doc",
-  "description": "Explains source code line-by-line or block-by-block via CodeLens markers, powered by GitHub Copilot.",
-  "version": "0.1.0",
+  "description": "Explains source code line-by-line or block-by-block or full file via CodeLens markers, powered by GitHub Copilot.",
+  "version": "0.2.0",
   "publisher": "moonolgerd",
   "repository": {
     "type": "git",
@@ -60,6 +60,10 @@
       {
         "command": "sourceDoc.refreshLenses",
         "title": "Source Doc: Refresh CodeLenses"
+      },
+      {
+        "command": "sourceDoc.explainFile",
+        "title": "Source Doc: Explain File (all lines)"
       }
     ],
     "configuration": {
@@ -72,11 +76,13 @@
         },
         "sourceDoc.mode": {
           "type": "string",
-          "enum": ["line", "block", "both"],
+          "enum": ["line", "block", "both", "file", "none"],
           "enumDescriptions": [
             "Show a CodeLens on every non-empty line.",
             "Show a CodeLens on every function, class, and method.",
-            "Show both per-line and per-block CodeLens markers."
+            "Show both per-line and per-block CodeLens markers.",
+            "Show only the file-level 'Explain file' CodeLens at the top of the file.",
+            "Disable all CodeLens markers."
           ],
           "default": "block",
           "description": "Granularity at which CodeLens markers are displayed."

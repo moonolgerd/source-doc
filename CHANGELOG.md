@@ -11,6 +11,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.2.0] — 2026-02-27
+
+### Added
+
+- **Explain file command** (`sourceDoc.explainFile`) — explains every non-noise line in the current file in parallel via `Promise.allSettled`, with a cancellable progress indicator showing `N / total done`.
+- **`file` mode** — shows only the file-level `$(comment) Explain file` CodeLens at line 0; no per-line or per-block lenses.
+- **`none` mode** — disables all CodeLens markers entirely.
+- **Hover tooltip** — hovering over truncated inline ghost text shows the full explanation.
+- **Generated-file guard** (`isGeneratedFile`) — skips CodeLens on `*.d.ts`, `*.g.cs`, `*.g.i.cs`, `*.generated.*`, `*.designer.cs`, `*.min.js/css/mjs`, `*.pb.go`, `assemblyinfo.cs`.
+- **Noise line filtering** (`isNoiseLine`) — suppresses lenses on empty lines, pure-punctuation lines, comment lines, import/using directives, structural keywords (`try`/`finally`/`else`/`do`), and XAML closing tags.
+- **Status bar icons** for new modes: `$(file)` for `file`, `$(circle-slash)` for `none`.
+
+### Changed
+
+- Toggle cycle extended: `block → line → both → file → none → block`.
+- Copilot prompt tightened to 20 words max; responses now start with a verb and omit language name and "this code" boilerplate.
+- `isNoiseLine` and `isGeneratedFile` exported from `codeLensProvider.ts` for reuse in `extension.ts`.
+
+---
+
 ## [0.1.0] — 2026-02-27
 
 ### Added
@@ -28,5 +48,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **CI workflow** (GitHub Actions): compile + type-check on Ubuntu & Windows for every push and PR; VSIX packaging on pushes to `main`.
 - `CONTRIBUTING.md` with setup guide, coding conventions, and instructions for adding new language support.
 
-[Unreleased]: https://github.com/source-doc/source-doc/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/source-doc/source-doc/releases/tag/v0.1.0
+[Unreleased]: https://github.com/moonolgerd/source-doc/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/moonolgerd/source-doc/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/moonolgerd/source-doc/releases/tag/v0.1.0

@@ -59,9 +59,10 @@ export class ExplanationProvider implements vscode.Disposable {
         const model = models[0];
         const lang = languageLabel(languageId);
         const prompt = vscode.LanguageModelChatMessage.User(
-            `You are a code documentation assistant. Explain the following ${lang} code in one concise sentence (max 30 words). ` +
-            `Focus on WHAT it does, not HOW. Do not use markdown, backticks, or line breaks. ` +
-            `Reply with plain text only.\n\nCode:\n\`\`\`${languageId}\n${code.trim()}\n\`\`\``,
+            `You are a code documentation assistant. Explain what the following code does in one concise sentence (max 20 words). ` +
+            `Start directly with a verb (e.g. "Initializes…", "Returns…", "Checks…"). ` +
+            `Do NOT mention the language, do NOT say "this code" or "this function". ` +
+            `No markdown, no backticks, no line breaks. Plain text only.\n\nCode:\n\`\`\`${languageId}\n${code.trim()}\n\`\`\``,
         );
 
         let result = '';

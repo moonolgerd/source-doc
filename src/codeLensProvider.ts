@@ -1,6 +1,43 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 
-export type ExplainMode = 'line' | 'block' | 'both';
+export type ExplainMode = 'line' | 'block' | 'both' | 'file' | 'none';
+
+/**
+ * Returns true for auto-generated files that should be skipped entirely.
+ * Patterns: *.d.ts, *.g.cs, *.g.i.cs, *.generated.*, *.designer.cs, *.min.js, *.min.css
+ */
+export function isGeneratedFile(document: vscode.TextDocument): boolean {
+    const fsPath = document.uri.fsPath;
+    const base = path.basename(fsPath).toLowerCase();
+    return (
+        /\.d\.ts$/.test(base) ||
+        /\.g\.cs$/.test(base) ||
+        /\.g\.i\.cs$/.test(base) ||
+        /\.generated\./.test(base) ||
+        /\.designer\.cs$/.test(base) ||
+        /\.min\.(js|css|mjs)$/.test(base) ||
+        /\.pb\.go$/.test(base) ||
+        base === 'assemblyinfo.cs'
+    );
+}
+
+/**
+ * Returns true for lines that don't merit an Explain lens.
+ * Extracted so extension.ts can reuse it for the explainFile command.
+ */
+export function isNoiseLine(trimmed: string, languageId: string): boolean {
+    if (trimmed.length === 0) { return true; }
+    if (/^[^a-zA-Z0-9_$]+$/.test(trimmed)) { return true; }
+    if (/^(\/\/|#|--|%%|;)/.test(trimmed)) { return true; }
+    if (/^\/\*|^\*[\s/]|^\*$/.test(trimmed)) { return true; }
+    if (/^(try|finally|else|do)\s*\{?\s*$/.test(trimmed)) { return true; }
+    if (/^(import\s|export\s+\*|from\s+'|from\s+"|require\s*\(|using\s+[\w.]+;|#include\s*[<"])/.test(trimmed)) { return true; }
+    if (languageId === 'xaml' || languageId === 'xml') {
+        if (trimmed.startsWith('</') || trimmed.startsWith('<!--')) { return true; }
+    }
+    return false;
+}
 
 /**
  * Provides CodeLens markers for the Source Doc extension.
@@ -42,14 +79,43 @@ export class SourceDocCodeLensProvider implements vscode.CodeLensProvider {
             return [];
         }
 
-        const mode = config.get<ExplainMode>('mode', 'block');
-        const lenses: vscode.CodeLens[] = [];
-
-        if (mode === 'block' || mode === 'both') {
-            lenses.push(...(await this.blockLenses(document)));
+        if (isGeneratedFile(document)) {
+            return [];
         }
-        if (mode === 'line' || mode === 'both') {
-            lenses.push(...this.lineLenses(document));
+
+        const mode = config.get<ExplainMode>('mode', 'block');
+
+        // 'none' — no lenses at all
+        if (mode === 'none') {
+            return [];
+        }
+
+        const lenses: vscode.CodeLens[] = [];
+        const firstRange = new vscode.Range(0, 0, 0, document.lineAt(0).text.length);
+
+        // File-level lens at line 0 — always shown (except 'none')
+        lenses.push(
+            new vscode.CodeLens(firstRange, {
+                title: '$(comment) Explain file',
+                command: 'sourceDoc.explainFile',
+                tooltip: 'Explain every line in this file with Copilot',
+                arguments: [
+                    {
+                        uri: document.uri,
+                        languageId: document.languageId,
+                    },
+                ],
+            }),
+        );
+
+        // 'file' mode — only the file-level lens, no per-line/per-block lenses
+        if (mode !== 'file') {
+            if (mode === 'block' || mode === 'both') {
+                lenses.push(...(await this.blockLenses(document)));
+            }
+            if (mode === 'line' || mode === 'both') {
+                lenses.push(...this.lineLenses(document));
+            }
         }
 
         return lenses;
@@ -255,33 +321,8 @@ export class SourceDocCodeLensProvider implements vscode.CodeLensProvider {
         return lenses;
     }
 
-    /**
-     * Returns true for lines that don't merit an Explain lens:
-     * - empty / whitespace-only
-     * - lines with no word characters at all (closing brackets, structural
-     *   punctuation): `}`, `})`, `});`, `}),`, `]`, `];`, `);`, `{`, etc.
-     * - XAML / XML closing tags: `</Foo>`
-     */
+    /** Delegate to the exported top-level function so it can be reused externally. */
     private isNoiseLine(trimmed: string, languageId: string): boolean {
-        if (trimmed.length === 0) { return true; }
-        // No word characters (letters, digits, _ or $) → pure structural noise
-        // e.g. `}`, `})`, `]);`, `{`, `*/`, etc.
-        if (/^[^a-zA-Z0-9_$]+$/.test(trimmed)) { return true; }
-        // Single-line comments: //, #, -- (SQL/Lua), %% (MATLAB), ; (asm)
-        if (/^(\/\/|#|--|%%|;)/.test(trimmed)) { return true; }
-        // Block comment lines: `/*`, ` * `, ` */`, `/**`
-        if (/^\/\*|^\*[\s/]|^\*$/.test(trimmed)) { return true; }
-        // Structural-only keywords that carry no explainable semantics on their own:
-        // `try {`, `try`, `finally {`, `finally`, `else {`, `else`, `do {`, `do`
-        if (/^(try|finally|else|do)\s*\{?\s*$/.test(trimmed)) { return true; }
-        // Import / using / require / include directives
-        if (/^(import\s|export\s+\*|from\s+'|from\s+"|require\s*\(|using\s+[\w.]+;|#include\s*[<"])/.test(trimmed)) { return true; }
-        // XAML / XML closing tags and comments
-        if (languageId === 'xaml' || languageId === 'xml') {
-            if (trimmed.startsWith('</') || trimmed.startsWith('<!--')) {
-                return true;
-            }
-        }
-        return false;
+        return isNoiseLine(trimmed, languageId);
     }
 }

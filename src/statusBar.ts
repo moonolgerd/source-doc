@@ -46,6 +46,8 @@ export class SourceDocStatusBar implements vscode.Disposable {
                 line: '$(list-flat)',
                 block: '$(symbol-method)',
                 both: '$(list-tree)',
+                file: '$(file)',
+                none: '$(circle-slash)',
             };
             this.item.text = `${modeIcon[mode] ?? ''} Source Doc: ${mode}`;
             this.item.backgroundColor = undefined;

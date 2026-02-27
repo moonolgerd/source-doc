@@ -42,16 +42,23 @@ src/
 **Implements:** `vscode.CodeLensProvider`
 **Registered via:** `vscode.languages.registerCodeLensProvider({ scheme: 'file', language: <id> }, provider)`
 
+**Exported helpers (reused by `extension.ts`):**
+- `isGeneratedFile(document)` — returns `true` for `*.d.ts`, `*.g.cs`, `*.g.i.cs`, `*.generated.*`, `*.designer.cs`, `*.min.js/css/mjs`, `*.pb.go`, `assemblyinfo.cs`. Files matching this are shown no lenses.
+- `isNoiseLine(trimmed, languageId)` — returns `true` for blank lines, pure-punctuation lines, comment lines, import/using directives, structural keywords (`try`/`finally`/`else`/`do`), and XAML closing tags.
+
 **Responsibilities:**
 - Produce `vscode.CodeLens` objects for every open document of a configured language.
-- Support three modes: `block`, `line`, `both` (read from `sourceDoc.mode` at call time).
+- Support five modes: `block`, `line`, `both`, `file`, `none` (read from `sourceDoc.mode` at call time).
+- Return `[]` immediately for generated files or when `mode === 'none'`.
+- **Always** add a file-level `$(comment) Explain file` lens at line 0 (for all modes except `none`).
 - **Block mode (symbol-based):** call `vscode.executeDocumentSymbolProvider`; filter to
   `SymbolKind` values `Function`, `Method`, `Class`, `Interface`, `Constructor`,
   `Property`, `Enum`, `Module`, `Struct`; recurse into `sym.children`.
 - **Block mode (regex fallback):** when the symbol provider returns `[]` (language server
   not yet loaded), call `regexBlockLenses()` immediately and schedule a debounced 2.5 s
   `setTimeout` retry via `_onDidChangeCodeLenses.fire()`.
-- **Line mode:** iterate `document.lineCount`, skip blank lines.
+- **Line mode:** iterate `document.lineCount`, skip noise lines.
+- **File mode:** only the file-level lens; skip per-line and per-block lenses.
 - Fire `onDidChangeCodeLenses` on `sourceDoc.enabled` / `sourceDoc.mode` config changes,
   `onDidChangeActiveTextEditor`, and `onDidOpenTextDocument`.
 - Public `refresh()` method for the `sourceDoc.refreshLenses` command.
@@ -104,9 +111,11 @@ interface ExplainArgs {
 
 **Copilot prompt template:**
 ```
-You are a code documentation assistant. Explain the following <Language> code
-in one concise sentence (max 30 words). Focus on WHAT it does, not HOW.
-Do not use markdown, backticks, or line breaks. Reply with plain text only.
+You are a code documentation assistant. Explain what the following code does
+in one concise sentence (max 20 words).
+Start directly with a verb (e.g. "Initializes…", "Returns…", "Checks…").
+Do NOT mention the language, do NOT say "this code" or "this function".
+No markdown, no backticks, no line breaks. Plain text only.
 
 Code:
 ```<languageId>
@@ -130,11 +139,13 @@ Code:
   },
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed
   ```
-- Maintain `Map<uriString, Map<lineNumber, explanationText>>` across all visible editors.
+- Maintain two maps per editor:
+  - `displayMap`: `Map<uriString, Map<lineNumber, truncatedText>>` — shown inline.
+  - `fullMap`: `Map<uriString, Map<lineNumber, fullText>>` — used by hover provider.
 - `setExplanation(editor, line, text, maxLength)`: truncate via `util.truncate()`,
-  update the inner map, call `editor.setDecorations()` with the full map contents
-  (VS Code requires a full re-apply to show multiple decorations).
+  update both maps, call `editor.setDecorations()` with the full display map contents.
 - Ghost text content format: `  // <explanation>`
+- `getFullExplanation(uriString, line)` — returns unexpurgated text for the hover provider.
 - `clearForEditor(editor)` — remove entries and decorations for one editor.
 - `clearAll()` — clear all entries and call `setDecorations([])` on all visible editors.
 - Auto-clear via `onDidChangeTextDocument` (edits) and `onDidCloseTextDocument` (close).
@@ -152,6 +163,8 @@ Code:
   - `block` → `$(symbol-method) Source Doc: block`
   - `line`  → `$(list-flat) Source Doc: line`
   - `both`  → `$(list-tree) Source Doc: both`
+  - `file`  → `$(file) Source Doc: file`
+  - `none`  → `$(circle-slash) Source Doc: none`
   - disabled → `$(comment) Source Doc: off` with `statusBarItem.warningBackground`
 - Subscribe to `onDidChangeConfiguration` for `sourceDoc.enabled` and `sourceDoc.mode`.
 
@@ -165,6 +178,21 @@ Code:
 | `truncate` | `(text: string, maxLength: number) => string` | Collapse whitespace, trim, append `…` if over limit |
 | `languageLabel` | `(languageId: string) => string` | VS Code language ID → human-readable name for Copilot prompts |
 
+### 2.6 `extension.ts` — Command Registration
+
+**Commands registered:**
+
+| Command | Handler |
+|---|---|
+| `sourceDoc.explainLine` | `runExplain(args)` |
+| `sourceDoc.explainBlock` | `runExplain(args)` |
+| `sourceDoc.explainFile` | Collect non-noise lines; `Promise.allSettled(lines.map(explain))`; apply decorations as each resolves; show cancellable progress `N / total done`; report aggregate errors |
+| `sourceDoc.toggleMode` | Cycle `block → line → both → file → none → block` |
+| `sourceDoc.clearExplanations` | `decorationManager.clearAll()` |
+| `sourceDoc.refreshLenses` | `codeLensProvider.refresh()` |
+
+**Hover provider** registered for `{ scheme: 'file' }`: returns a `vscode.Hover` with the full explanation when `decorationManager.getFullExplanation()` indicates the ghost text was truncated.
+
 ---
 
 ## 3. Data Flow
@@ -174,31 +202,40 @@ User opens file
        │
        ▼
 SourceDocCodeLensProvider.provideCodeLenses(document)
+       │  isGeneratedFile() → return []
+       │  mode === 'none'   → return []
        │
+       ├─ always: file-level "Explain file" lens at line 0
        ├─ [block] vscode.executeDocumentSymbolProvider
        │           └─ empty → regexBlockLenses() + scheduleRetry(2500 ms)
-       └─ [line]  iterate non-empty lines
+       ├─ [line]  iterate non-noise lines (isNoiseLine)
+       └─ [file]  skip per-line and per-block lenses
        │
        ▼
 CodeLens rendered — user clicks marker
        │
-       ▼
-extension.ts: runExplain(args)
-       │  reconstruct vscode.Uri from JSON-serialised args
-       │  find editor by URI, fall back to activeTextEditor
-       │  vscode.window.withProgress(cancellable)
+       ├─ explainLine / explainBlock
+       │     └─ extension.ts: runExplain(args)
+       │           │  reconstruct vscode.Uri · find editor · withProgress(cancellable)
+       │           └─ ExplanationProvider.explain(code, languageId, token)
+       │               ├─ cache hit  → return immediately
+       │               └─ cache miss → vscode.lm.selectChatModels({ vendor: 'copilot' })
+       │                               stream response.text chunks · addToCache
        │
-       ▼
-ExplanationProvider.explain(code, languageId, token)
-       ├─ cache hit  → return immediately
-       └─ cache miss → vscode.lm.selectChatModels({ vendor: 'copilot' })
-                       model.sendRequest([prompt], {}, token)
-                       stream response.text chunks
-                       addToCache(hash, text)
+       └─ explainFile
+             │  isGeneratedFile() guard
+             │  collect non-noise lines
+             │  withProgress(cancellable)
+             └─ Promise.allSettled(lines.map(line =>
+                    ExplanationProvider.explain(line.code, languageId, token)
+                    .then(text => decorationManager.setExplanation(editor, line, text))
+                ))
+                aggregate errors → showErrorMessage
        │
        ▼
 DecorationManager.setExplanation(editor, line, text, maxLength)
-       truncate → update Map → editor.setDecorations(full set)
+       ├─ displayMap (truncated) → editor.setDecorations()
+       └─ fullMap (full text) → HoverProvider.provideHover() when truncated
 ```
 
 ---

@@ -3,13 +3,15 @@ import { truncate } from './util';
 
 /**
  * Manages inline ghost-text decorations that show code explanations
- * as italic text after the relevant line.
+ * as italic text after the relevant line, plus stores full text for hover.
  */
 export class DecorationManager implements vscode.Disposable {
     private readonly decorationType: vscode.TextEditorDecorationType;
 
-    /** Map from editor URI string → (line number → explanation text) */
-    private readonly explanations = new Map<string, Map<number, string>>();
+    /** uri → (line → truncated display text) */
+    private readonly displayMap = new Map<string, Map<number, string>>();
+    /** uri → (line → full untruncated text, for hover) */
+    private readonly fullMap = new Map<string, Map<number, string>>();
 
     private readonly disposables: vscode.Disposable[] = [];
 
@@ -23,7 +25,6 @@ export class DecorationManager implements vscode.Disposable {
             rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
         });
 
-        // Clear stale decorations when a document changes
         this.disposables.push(
             vscode.workspace.onDidChangeTextDocument(e => {
                 this.clearForUri(e.document.uri.toString());
@@ -35,37 +36,44 @@ export class DecorationManager implements vscode.Disposable {
     }
 
     /**
-     * Set an explanation for a specific line in an editor.
-     * Re-applies ALL decorations for that editor so VS Code shows the full set.
+     * Store an explanation for a line and render it as inline ghost text.
+     * The full text is kept separately so a hover provider can show it uncut.
      */
     setExplanation(
         editor: vscode.TextEditor,
         line: number,
-        text: string,
+        fullText: string,
         maxLength: number,
     ): void {
         const key = editor.document.uri.toString();
-        if (!this.explanations.has(key)) {
-            this.explanations.set(key, new Map());
-        }
+
+        if (!this.displayMap.has(key)) { this.displayMap.set(key, new Map()); }
+        if (!this.fullMap.has(key))    { this.fullMap.set(key, new Map()); }
+
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.explanations.get(key)!.set(line, truncate(text, maxLength));
+        this.displayMap.get(key)!.set(line, truncate(fullText, maxLength));
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        this.fullMap.get(key)!.set(line, fullText);
+
         this.applyDecorations(editor);
     }
 
     /**
-     * Remove all explanations for the given editor.
+     * Return the full (untruncated) explanation for a given URI + line,
+     * or undefined if none is stored. Used by the hover provider.
      */
+    getFullExplanation(uriString: string, line: number): string | undefined {
+        return this.fullMap.get(uriString)?.get(line);
+    }
+
     clearForEditor(editor: vscode.TextEditor): void {
         this.clearForUri(editor.document.uri.toString());
         editor.setDecorations(this.decorationType, []);
     }
 
-    /**
-     * Remove all explanations across all editors.
-     */
     clearAll(): void {
-        this.explanations.clear();
+        this.displayMap.clear();
+        this.fullMap.clear();
         for (const editor of vscode.window.visibleTextEditors) {
             editor.setDecorations(this.decorationType, []);
         }
@@ -74,8 +82,9 @@ export class DecorationManager implements vscode.Disposable {
     // ─── private ────────────────────────────────────────────────────────────
 
     private clearForUri(uriString: string): void {
-        if (this.explanations.has(uriString)) {
-            this.explanations.delete(uriString);
+        if (this.displayMap.has(uriString)) {
+            this.displayMap.delete(uriString);
+            this.fullMap.delete(uriString);
             const editor = vscode.window.visibleTextEditors.find(
                 e => e.document.uri.toString() === uriString,
             );
@@ -87,7 +96,7 @@ export class DecorationManager implements vscode.Disposable {
 
     private applyDecorations(editor: vscode.TextEditor): void {
         const key = editor.document.uri.toString();
-        const lineMap = this.explanations.get(key);
+        const lineMap = this.displayMap.get(key);
         if (!lineMap || lineMap.size === 0) {
             editor.setDecorations(this.decorationType, []);
             return;
@@ -95,14 +104,15 @@ export class DecorationManager implements vscode.Disposable {
 
         const options: vscode.DecorationOptions[] = [];
         for (const [line, text] of lineMap) {
-            if (line >= editor.document.lineCount) {
-                continue;
-            }
-            const lineText = editor.document.lineAt(line).text;
-            const endChar = lineText.length;
-            const range = new vscode.Range(line, endChar, line, endChar);
+            if (line >= editor.document.lineCount) { continue; }
+            const endChar = editor.document.lineAt(line).text.length;
+            const full = this.fullMap.get(key)?.get(line);
+            const isTruncated = full !== undefined && full !== text;
             options.push({
-                range,
+                range: new vscode.Range(line, endChar, line, endChar),
+                hoverMessage: isTruncated
+                    ? new vscode.MarkdownString(`**Source Doc**\n\n${full}`)
+                    : undefined,
                 renderOptions: {
                     after: { contentText: `  // ${text}` },
                 },
