@@ -2,6 +2,7 @@
 .github/**
 .copilot-specs-cache/**
 src/**
+scripts/**
 .gitignore
 tsconfig.json
 CONTRIBUTING.md
