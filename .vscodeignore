@@ -1,0 +1,11 @@
+.vscode/**
+.github/**
+.copilot-specs-cache/**
+src/**
+.gitignore
+tsconfig.json
+CONTRIBUTING.md
+**/*.map
+**/*.ts
+!out/**
+node_modules/**

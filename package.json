@@ -1,0 +1,116 @@
+{
+  "name": "source-doc",
+  "displayName": "Source Doc",
+  "description": "Explains source code line-by-line or block-by-block via CodeLens markers, powered by GitHub Copilot.",
+  "version": "0.1.0",
+  "publisher": "moonolgerd",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/moonolgerd/source-doc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/moonolgerd/source-doc/issues"
+  },
+  "homepage": "https://github.com/moonolgerd/source-doc#readme",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Programming Languages", "Other"],
+  "keywords": ["codelens", "explain", "copilot", "ai", "documentation", "inline", "ghost text"],
+  "activationEvents": [
+    "onStartupFinished",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact",
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact",
+    "onLanguage:csharp",
+    "onLanguage:xaml",
+    "onLanguage:python",
+    "onLanguage:java",
+    "onLanguage:go",
+    "onLanguage:rust",
+    "onLanguage:cpp",
+    "onLanguage:c"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "sourceDoc.explainLine",
+        "title": "Source Doc: Explain Line"
+      },
+      {
+        "command": "sourceDoc.explainBlock",
+        "title": "Source Doc: Explain Block"
+      },
+      {
+        "command": "sourceDoc.toggleMode",
+        "title": "Source Doc: Toggle Mode (line / block / both)"
+      },
+      {
+        "command": "sourceDoc.clearExplanations",
+        "title": "Source Doc: Clear All Explanations"
+      },
+      {
+        "command": "sourceDoc.refreshLenses",
+        "title": "Source Doc: Refresh CodeLenses"
+      }
+    ],
+    "configuration": {
+      "title": "Source Doc",
+      "properties": {
+        "sourceDoc.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable Source Doc CodeLens markers."
+        },
+        "sourceDoc.mode": {
+          "type": "string",
+          "enum": ["line", "block", "both"],
+          "enumDescriptions": [
+            "Show a CodeLens on every non-empty line.",
+            "Show a CodeLens on every function, class, and method.",
+            "Show both per-line and per-block CodeLens markers."
+          ],
+          "default": "block",
+          "description": "Granularity at which CodeLens markers are displayed."
+        },
+        "sourceDoc.languages": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["typescript", "typescriptreact", "javascript", "javascriptreact", "csharp", "xaml"],
+          "description": "Language IDs for which Source Doc CodeLens markers are shown."
+        },
+        "sourceDoc.modelFamily": {
+          "type": "string",
+          "default": "gpt-4o",
+          "description": "GitHub Copilot model family to use for explanations (e.g. 'gpt-4o', 'gpt-4o-mini', 'claude-sonnet-4-5')."
+        },
+        "sourceDoc.maxExplanationLength": {
+          "type": "number",
+          "default": 160,
+          "minimum": 40,
+          "maximum": 400,
+          "description": "Maximum number of characters shown in the inline ghost text. Longer explanations are truncated with '…'."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.4.0"
+  }
+}
