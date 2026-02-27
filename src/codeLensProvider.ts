@@ -191,6 +191,13 @@ export class SourceDocCodeLensProvider implements vscode.CodeLensProvider {
             if (interestingKinds.has(sym.kind)) {
                 const firstLine = sym.range.start.line;
                 const lineText = document.lineAt(firstLine).text;
+                // Skip if the symbol's first line is noise (e.g. a lone `{`)
+                if (this.isNoiseLine(lineText.trim(), document.languageId)) {
+                    if (sym.children?.length) {
+                        this.collectSymbolLenses(sym.children, document, lenses);
+                    }
+                    continue;
+                }
                 const range = new vscode.Range(
                     firstLine, 0,
                     firstLine, lineText.length,
@@ -224,7 +231,8 @@ export class SourceDocCodeLensProvider implements vscode.CodeLensProvider {
         const lenses: vscode.CodeLens[] = [];
         for (let i = 0; i < document.lineCount; i++) {
             const lineText = document.lineAt(i).text;
-            if (lineText.trim().length === 0) {
+            const trimmed = lineText.trim();
+            if (this.isNoiseLine(trimmed, document.languageId)) {
                 continue;
             }
             const range = new vscode.Range(i, 0, i, lineText.length);
@@ -237,7 +245,7 @@ export class SourceDocCodeLensProvider implements vscode.CodeLensProvider {
                         {
                             uri: document.uri,
                             line: i,
-                            code: lineText.trim(),
+                            code: trimmed,
                             languageId: document.languageId,
                         },
                     ],
@@ -245,5 +253,35 @@ export class SourceDocCodeLensProvider implements vscode.CodeLensProvider {
             );
         }
         return lenses;
+    }
+
+    /**
+     * Returns true for lines that don't merit an Explain lens:
+     * - empty / whitespace-only
+     * - lines with no word characters at all (closing brackets, structural
+     *   punctuation): `}`, `})`, `});`, `}),`, `]`, `];`, `);`, `{`, etc.
+     * - XAML / XML closing tags: `</Foo>`
+     */
+    private isNoiseLine(trimmed: string, languageId: string): boolean {
+        if (trimmed.length === 0) { return true; }
+        // No word characters (letters, digits, _ or $) → pure structural noise
+        // e.g. `}`, `})`, `]);`, `{`, `*/`, etc.
+        if (/^[^a-zA-Z0-9_$]+$/.test(trimmed)) { return true; }
+        // Single-line comments: //, #, -- (SQL/Lua), %% (MATLAB), ; (asm)
+        if (/^(\/\/|#|--|%%|;)/.test(trimmed)) { return true; }
+        // Block comment lines: `/*`, ` * `, ` */`, `/**`
+        if (/^\/\*|^\*[\s/]|^\*$/.test(trimmed)) { return true; }
+        // Structural-only keywords that carry no explainable semantics on their own:
+        // `try {`, `try`, `finally {`, `finally`, `else {`, `else`, `do {`, `do`
+        if (/^(try|finally|else|do)\s*\{?\s*$/.test(trimmed)) { return true; }
+        // Import / using / require / include directives
+        if (/^(import\s|export\s+\*|from\s+'|from\s+"|require\s*\(|using\s+[\w.]+;|#include\s*[<"])/.test(trimmed)) { return true; }
+        // XAML / XML closing tags and comments
+        if (languageId === 'xaml' || languageId === 'xml') {
+            if (trimmed.startsWith('</') || trimmed.startsWith('<!--')) {
+                return true;
+            }
+        }
+        return false;
     }
 }
