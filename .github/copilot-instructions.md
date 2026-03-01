@@ -72,6 +72,8 @@ Prompt to model (in `explanationProvider.ts`):
   - colour: `editorCodeLens.foreground`, italic, `margin: 0 0 0 2em`
   - content: `  // <explanation>`
 - Maintains two maps: **displayMap** (truncated) and **fullMap** (full text).
+- Listens to `onDidChangeVisibleTextEditors` and re-applies stored decorations whenever the visible editor set changes — ghost text persists across tab switches.
+- Auto-clears on `onDidChangeTextDocument` and `onDidCloseTextDocument`.
 - `HoverProvider` (registered in `extension.ts`) shows full text when the decorated line's explanation exceeds `sourceDoc.maxExplanationLength`.
 
 ---
@@ -81,10 +83,12 @@ Prompt to model (in `explanationProvider.ts`):
 `sourceDoc.explainFile`:
 1. Guards against generated files.
 2. Collects all non-noise lines via `isNoiseLine`.
-3. Explains all lines **in parallel** with `Promise.allSettled`.
+3. Explains lines via `runWithConcurrency(lines, 5, ...)` — max **5 concurrent** Copilot requests to avoid rate-limit errors on large files.
 4. Applies decorations as each result arrives.
 5. Shows cancellable progress bar: `N / total done`.
 6. Surfaces aggregate error summary if any lines fail.
+
+`runWithConcurrency<T>(items, limit, fn)` is a private helper in `extension.ts` that returns a `PromiseSettledResult[]` (same shape as `Promise.allSettled`) while keeping at most `limit` in-flight at a time.
 
 ---
 
