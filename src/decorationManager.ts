@@ -32,6 +32,11 @@ export class DecorationManager implements vscode.Disposable {
             vscode.workspace.onDidCloseTextDocument(doc => {
                 this.clearForUri(doc.uri.toString());
             }),
+            vscode.window.onDidChangeVisibleTextEditors(editors => {
+                for (const editor of editors) {
+                    this.applyDecorations(editor);
+                }
+            }),
         );
     }
 

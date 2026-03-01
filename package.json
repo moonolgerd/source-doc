@@ -2,7 +2,7 @@
   "name": "source-doc",
   "displayName": "Source Doc",
   "description": "Explains source code line-by-line or block-by-block or full file via CodeLens markers, powered by GitHub Copilot.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "publisher": "moonolgerd",
   "repository": {
     "type": "git",

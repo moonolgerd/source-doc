@@ -9,6 +9,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+---
+
+## [0.2.2] — 2026-02-28
+
+### Fixed
+
+- **`explainFile` crashes mid-file** — replaced unbounded `Promise.allSettled` fan-out with a concurrency-limited runner (max 5 simultaneous requests) to avoid overwhelming the Copilot LM API on larger files.
+- **Ghost text lost on tab switch** — `DecorationManager` now listens to `onDidChangeVisibleTextEditors` and re-applies stored decorations whenever the visible editor set changes, so explanations persist when switching away and back.
+
 ### Added
 
 - **Automated test suite** using `@vscode/test-electron` and Mocha (`tdd` UI), runnable via `npm test`.
@@ -70,7 +79,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **CI workflow** (GitHub Actions): compile + type-check on Ubuntu & Windows for every push and PR; VSIX packaging on pushes to `main`.
 - `CONTRIBUTING.md` with setup guide, coding conventions, and instructions for adding new language support.
 
-[Unreleased]: https://github.com/moonolgerd/source-doc/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/moonolgerd/source-doc/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/moonolgerd/source-doc/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/moonolgerd/source-doc/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/moonolgerd/source-doc/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/moonolgerd/source-doc/releases/tag/v0.1.0

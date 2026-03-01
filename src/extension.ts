@@ -161,8 +161,10 @@ export function activate(context: vscode.ExtensionContext): void {
                     },
                     async (progress, token) => {
                         let done = 0;
-                        const results = await Promise.allSettled(
-                            lines.map(async ({ line, code }) => {
+                        const results = await runWithConcurrency(
+                            lines,
+                            5,
+                            async ({ line, code }) => {
                                 if (token.isCancellationRequested) { return; }
                                 const explanation = await explanationProvider.explain(
                                     code,
@@ -174,7 +176,7 @@ export function activate(context: vscode.ExtensionContext): void {
                                 }
                                 done++;
                                 progress.report({ message: `${done} / ${lines.length} done` });
-                            }),
+                            },
                         );
                         const errors = results
                             .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
@@ -219,6 +221,36 @@ function registerCodeLensProviders(
             ),
         );
     }
+}
+
+/**
+ * Run `fn` over every item in `items` with at most `limit` concurrent
+ * invocations. Returns a `Promise.allSettled`-compatible result array.
+ */
+async function runWithConcurrency<T>(
+    items: T[],
+    limit: number,
+    fn: (item: T) => Promise<void>,
+): Promise<PromiseSettledResult<void>[]> {
+    const results: PromiseSettledResult<void>[] = new Array(items.length);
+    let next = 0;
+
+    async function worker(): Promise<void> {
+        while (next < items.length) {
+            const i = next++;
+            try {
+                await fn(items[i]);
+                results[i] = { status: 'fulfilled', value: undefined };
+            } catch (reason) {
+                results[i] = { status: 'rejected', reason };
+            }
+        }
+    }
+
+    await Promise.all(
+        Array.from({ length: Math.min(limit, items.length) }, worker),
+    );
+    return results;
 }
 
 async function runExplain(
