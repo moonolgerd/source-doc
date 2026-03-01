@@ -71,7 +71,7 @@ subscription.
 
 **Acceptance Criteria:**
 - WHEN `sourceDoc.languages` is changed in settings, THE SYSTEM SHALL re-register the CodeLens provider for the new language set without requiring a reload.
-- THE SYSTEM SHALL support TypeScript, TSX, JavaScript, JSX, C#, and XAML by default.
+- THE SYSTEM SHALL support TypeScript, TSX, JavaScript, JSX, C#, XAML, Python, Java, Go, Kotlin, Dart, Swift, Rust, C, and C++ by default.
 - WHEN a language ID is added to `sourceDoc.languages`, THE SYSTEM SHALL activate and show markers for that language.
 
 ---
@@ -83,7 +83,7 @@ subscription.
 
 **Acceptance Criteria:**
 - THE SYSTEM SHALL display a `$(comment) Explain file` CodeLens at line 0 of every non-generated file (in all modes except `none`).
-- WHEN `sourceDoc.explainFile` is invoked, THE SYSTEM SHALL explain all non-noise lines **in parallel** using `Promise.allSettled`.
+- WHEN `sourceDoc.explainFile` is invoked, THE SYSTEM SHALL explain all non-noise lines **concurrently** (max 5 in-flight at a time via `runWithConcurrency`) using settled results equivalent to `Promise.allSettled`.
 - WHEN `sourceDoc.explainFile` is invoked, THE SYSTEM SHALL display a cancellable progress indicator showing `N / total done`.
 - WHEN individual lines fail, THE SYSTEM SHALL continue explaining remaining lines and surface a summary error message at the end.
 - WHEN the user cancels, THE SYSTEM SHALL stop issuing new requests and retain any ghost text already applied.
@@ -111,7 +111,7 @@ subscription.
 |---|---|---|---|
 | `sourceDoc.enabled` | `boolean` | `true` | Master on/off switch for all CodeLens markers |
 | `sourceDoc.mode` | `"block"\|"line"\|"both"\|"file"\|"none"` | `"block"` | Granularity of CodeLens markers |
-| `sourceDoc.languages` | `string[]` | `["typescript","typescriptreact","javascript","javascriptreact","csharp","xaml"]` | Language IDs to activate on |
+| `sourceDoc.languages` | `string[]` | `["typescript","typescriptreact","javascript","javascriptreact","csharp","xaml","python","java","go","kotlin","dart","swift","rust","c","cpp"]` | Language IDs to activate on |
 | `sourceDoc.modelFamily` | `string` | `"gpt-4o"` | Copilot model family; falls back to any available Copilot model |
 | `sourceDoc.maxExplanationLength` | `number` (40–400) | `160` | Max ghost-text characters before truncation |
 
@@ -123,4 +123,3 @@ subscription.
 - Support for non-`file://` URI schemes (e.g. virtual filesystems, `git://`).
 - Multi-line ghost text or collapsible explanation trees.
 - Direct OpenAI / Azure OpenAI integration (Copilot only via `vscode.lm`).
-- Automated test suite (no `@vscode/test-electron` harness in v0.1).

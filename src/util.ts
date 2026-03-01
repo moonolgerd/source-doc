@@ -32,10 +32,13 @@ export function languageLabel(languageId: string): string {
         xaml: 'XAML',
         python: 'Python',
         java: 'Java',
-        cpp: 'C++',
-        c: 'C',
         go: 'Go',
+        kotlin: 'Kotlin',
+        dart: 'Dart',
+        swift: 'Swift',
         rust: 'Rust',
+        c: 'C',
+        cpp: 'C++',
         ruby: 'Ruby',
     };
     return labels[languageId] ?? languageId;

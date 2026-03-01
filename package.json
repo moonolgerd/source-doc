@@ -2,7 +2,7 @@
   "name": "source-doc",
   "displayName": "Source Doc",
   "description": "Explains source code line-by-line or block-by-block or full file via CodeLens markers, powered by GitHub Copilot.",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "publisher": "moonolgerd",
   "repository": {
     "type": "git",
@@ -47,7 +47,10 @@
     "onLanguage:go",
     "onLanguage:rust",
     "onLanguage:cpp",
-    "onLanguage:c"
+    "onLanguage:c",
+    "onLanguage:kotlin",
+    "onLanguage:dart",
+    "onLanguage:swift"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -115,7 +118,16 @@
             "javascript",
             "javascriptreact",
             "csharp",
-            "xaml"
+            "xaml",
+            "python",
+            "java",
+            "go",
+            "kotlin",
+            "dart",
+            "swift",
+            "rust",
+            "c",
+            "cpp"
           ],
           "description": "Language IDs for which Source Doc CodeLens markers are shown."
         },

@@ -176,7 +176,7 @@ Code:
 |---|---|---|
 | `contentHash` | `(text: string) => string` | First 16 hex chars of SHA-256(text); LRU cache key |
 | `truncate` | `(text: string, maxLength: number) => string` | Collapse whitespace, trim, append `…` if over limit |
-| `languageLabel` | `(languageId: string) => string` | VS Code language ID → human-readable name for Copilot prompts |
+| `languageLabel` | `(languageId: string) => string` | VS Code language ID → human-readable name for Copilot prompts. Covers TypeScript/TSX, JavaScript/JSX, C#, XAML, Python, Java, Go, Kotlin, Dart, Swift, Rust, C, C++, Ruby. Falls back to raw ID for unmapped languages. |
 
 ### 2.6 `extension.ts` — Command Registration
 
@@ -186,7 +186,7 @@ Code:
 |---|---|
 | `sourceDoc.explainLine` | `runExplain(args)` |
 | `sourceDoc.explainBlock` | `runExplain(args)` |
-| `sourceDoc.explainFile` | Collect non-noise lines; `Promise.allSettled(lines.map(explain))`; apply decorations as each resolves; show cancellable progress `N / total done`; report aggregate errors |
+| `sourceDoc.explainFile` | Collect non-noise lines; `runWithConcurrency(lines, 5, explain)` (max 5 in-flight); apply decorations as each resolves; show cancellable progress `N / total done`; show first error with total failure count |
 | `sourceDoc.toggleMode` | Cycle `block → line → both → file → none → block` |
 | `sourceDoc.clearExplanations` | `decorationManager.clearAll()` |
 | `sourceDoc.refreshLenses` | `codeLensProvider.refresh()` |
@@ -243,7 +243,7 @@ DecorationManager.setExplanation(editor, line, text, maxLength)
 ## 4. Activation & Lifecycle
 
 - **`activationEvents`**: `onStartupFinished` + `onLanguage:<id>` for each default
-  language (TypeScript, TSX, JavaScript, JSX, C#, XAML, Python, Java, Go, Rust, C++, C).
+  language (TypeScript, TSX, JavaScript, JSX, C#, XAML, Python, Java, Go, Kotlin, Dart, Swift, Rust, C++, C).
 - **`activate()`**: instantiates all four classes, pushes to `context.subscriptions`,
   calls `registerCodeLensProviders()`, wires commands and config-change listeners.
 - **`deactivate()`**: no-op — VS Code disposes all `context.subscriptions` entries.

@@ -32,7 +32,7 @@ export function isNoiseLine(trimmed: string, languageId: string): boolean {
     if (/^(\/\/|#|--|%%|;)/.test(trimmed)) { return true; }
     if (/^\/\*|^\*[\s/]|^\*$/.test(trimmed)) { return true; }
     if (/^(try|finally|else|do)\s*\{?\s*$/.test(trimmed)) { return true; }
-    if (/^(import\s|export\s+\*|from\s+'|from\s+"|require\s*\(|using\s+[\w.]+;|#include\s*[<"])/.test(trimmed)) { return true; }
+    if (/^(import\s|export\s+\*|from\s+'|from\s+"|from\s+\w|require\s*\(|using\s+[\w.]+;|#include\s*[<"]|use\s+[\w:*{])/.test(trimmed)) { return true; }
     if (languageId === 'xaml' || languageId === 'xml') {
         if (trimmed.startsWith('</') || trimmed.startsWith('<!--')) { return true; }
     }

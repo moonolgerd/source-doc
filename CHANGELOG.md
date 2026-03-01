@@ -11,6 +11,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.3.0] — 2026-02-28
+
+### Added
+
+- **Expanded default language support** — CodeLens markers now activate out-of-the-box for Python, Java, Go, Kotlin, Dart, Swift, Rust, C, and C++ in addition to the existing TypeScript/TSX, JavaScript/JSX, C#, and XAML.
+- **Noise-line filtering for new languages** — `isNoiseLine` import-directive regex extended with `from \w` (Python `from x import …`) and `use [\w:*{]` (Rust `use std::…`) alternatives so import statements in those languages are correctly suppressed.
+- **Language labels for new languages** — `languageLabel()` in `util.ts` now maps `kotlin`, `dart`, and `swift` to human-readable names used in Copilot prompt hints (Java, Go, Rust, C, C++ were already mapped).
+- **Test coverage for new languages** — import-noise and real-code test cases added to `codeLensProvider.test.ts` for all nine new languages.
+
+---
+
 ## [0.2.2] — 2026-02-28
 
 ### Fixed
@@ -79,7 +90,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **CI workflow** (GitHub Actions): compile + type-check on Ubuntu & Windows for every push and PR; VSIX packaging on pushes to `main`.
 - `CONTRIBUTING.md` with setup guide, coding conventions, and instructions for adding new language support.
 
-[Unreleased]: https://github.com/moonolgerd/source-doc/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/moonolgerd/source-doc/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/moonolgerd/source-doc/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/moonolgerd/source-doc/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/moonolgerd/source-doc/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/moonolgerd/source-doc/compare/v0.1.0...v0.2.0

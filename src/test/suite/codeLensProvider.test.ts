@@ -57,6 +57,36 @@ suite('isNoiseLine', () => {
         test('"using System;" is noise',    () => assert.strictEqual(isNoiseLine('using System;', 'csharp'), true));
         test('"require(" is noise',         () => assert.strictEqual(isNoiseLine("require('fs')", 'javascript'), true));
         test('"#include <stdio>" is noise', () => assert.strictEqual(isNoiseLine('#include <stdio.h>', 'c'), true));
+
+        // Python
+        test('"import os" is noise in python',            () => assert.strictEqual(isNoiseLine('import os', 'python'), true));
+        test('"from os import path" is noise in python',  () => assert.strictEqual(isNoiseLine('from os import path', 'python'), true));
+        test('"from typing import List" is noise in python', () => assert.strictEqual(isNoiseLine('from typing import List', 'python'), true));
+
+        // Go
+        test('"import \"fmt\"" is noise in go',           () => assert.strictEqual(isNoiseLine('import "fmt"', 'go'), true));
+        test('"import (" is noise in go',                () => assert.strictEqual(isNoiseLine('import (', 'go'), true));
+
+        // Kotlin
+        test('"import kotlin.io.*" is noise in kotlin',   () => assert.strictEqual(isNoiseLine('import kotlin.io.*', 'kotlin'), true));
+
+        // Dart
+        test('"import \'package:flutter...\'" is noise in dart', () => assert.strictEqual(isNoiseLine("import 'package:flutter/material.dart';", 'dart'), true));
+
+        // Swift
+        test('"import Foundation" is noise in swift',     () => assert.strictEqual(isNoiseLine('import Foundation', 'swift'), true));
+
+        // Rust
+        test('"use std::io;" is noise in rust',           () => assert.strictEqual(isNoiseLine('use std::io;', 'rust'), true));
+        test('"use std::collections::HashMap;" is noise in rust', () => assert.strictEqual(isNoiseLine('use std::collections::HashMap;', 'rust'), true));
+        test('"use {Foo, Bar};" is noise in rust',        () => assert.strictEqual(isNoiseLine('use {Foo, Bar};', 'rust'), true));
+        test('"use *;" is noise in rust',                 () => assert.strictEqual(isNoiseLine('use *;', 'rust'), true));
+        // Java
+        test('"import java.util.List;" is noise in java', () => assert.strictEqual(isNoiseLine('import java.util.List;', 'java'), true));
+        test('"import static org.junit..." is noise in java', () => assert.strictEqual(isNoiseLine('import static org.junit.Assert.*;', 'java'), true));
+        // C++
+        test('"#include <iostream>" is noise in cpp',     () => assert.strictEqual(isNoiseLine('#include <iostream>', 'cpp'), true));
+        test('"#include \"myheader.h\"" is noise in cpp', () => assert.strictEqual(isNoiseLine('#include "myheader.h"', 'cpp'), true));
     });
 
     suite('XAML closing tags', () => {
@@ -73,6 +103,53 @@ suite('isNoiseLine', () => {
         test('method signature',  () => assert.strictEqual(isNoiseLine('add(a: number, b: number): number {', 'typescript'), false));
         test('if statement',      () => assert.strictEqual(isNoiseLine('if (x > 0) {', 'typescript'), false));
         test('variable assignment', () => assert.strictEqual(isNoiseLine('x = y + z;', 'typescript'), false));
+
+        // Python
+        test('python def is not noise',      () => assert.strictEqual(isNoiseLine('def greet(name):', 'python'), false));
+        test('python assignment is not noise', () => assert.strictEqual(isNoiseLine('x = 42', 'python'), false));
+        test('python class is not noise',    () => assert.strictEqual(isNoiseLine('class MyClass:', 'python'), false));
+        test('python return is not noise',   () => assert.strictEqual(isNoiseLine('return result', 'python'), false));
+
+        // Go
+        test('go func is not noise',          () => assert.strictEqual(isNoiseLine('func main() {', 'go'), false));
+        test('go short var is not noise',     () => assert.strictEqual(isNoiseLine('x := 42', 'go'), false));
+        test('go type struct is not noise',   () => assert.strictEqual(isNoiseLine('type Point struct {', 'go'), false));
+
+        // Kotlin
+        test('kotlin fun is not noise',       () => assert.strictEqual(isNoiseLine('fun main() {', 'kotlin'), false));
+        test('kotlin val is not noise',       () => assert.strictEqual(isNoiseLine('val x = 42', 'kotlin'), false));
+        test('kotlin class is not noise',     () => assert.strictEqual(isNoiseLine('class Greeter(val name: String) {', 'kotlin'), false));
+
+        // Dart
+        test('dart void main is not noise',   () => assert.strictEqual(isNoiseLine('void main() {', 'dart'), false));
+        test('dart var is not noise',         () => assert.strictEqual(isNoiseLine('var x = 42;', 'dart'), false));
+        test('dart class is not noise',       () => assert.strictEqual(isNoiseLine('class MyWidget extends StatelessWidget {', 'dart'), false));
+
+        // Swift
+        test('swift func is not noise',       () => assert.strictEqual(isNoiseLine('func greet(name: String) -> String {', 'swift'), false));
+        test('swift let is not noise',        () => assert.strictEqual(isNoiseLine('let x = 42', 'swift'), false));
+        test('swift class is not noise',      () => assert.strictEqual(isNoiseLine('class MyClass {', 'swift'), false));
+
+        // Rust
+        test('rust fn is not noise',          () => assert.strictEqual(isNoiseLine('fn main() {', 'rust'), false));
+        test('rust let is not noise',         () => assert.strictEqual(isNoiseLine('let x = 42;', 'rust'), false));
+        test('rust struct is not noise',      () => assert.strictEqual(isNoiseLine('struct Point { x: f64, y: f64 }', 'rust'), false));
+
+        // C
+        test('c int main is not noise',       () => assert.strictEqual(isNoiseLine('int main() {', 'c'), false));
+        test('c printf is not noise',         () => assert.strictEqual(isNoiseLine('printf("hello");', 'c'), false));
+        test('c variable decl is not noise',  () => assert.strictEqual(isNoiseLine('int x = 42;', 'c'), false));
+
+        // Java
+        test('java class is not noise',       () => assert.strictEqual(isNoiseLine('public class Main {', 'java'), false));
+        test('java method is not noise',      () => assert.strictEqual(isNoiseLine('public static void main(String[] args) {', 'java'), false));
+        test('java variable is not noise',    () => assert.strictEqual(isNoiseLine('int x = 42;', 'java'), false));
+        test('java return is not noise',      () => assert.strictEqual(isNoiseLine('return result;', 'java'), false));
+
+        // C++
+        test('cpp class is not noise',        () => assert.strictEqual(isNoiseLine('class MyClass {', 'cpp'), false));
+        test('cpp cout is not noise',         () => assert.strictEqual(isNoiseLine('std::cout << "hello";', 'cpp'), false));
+        test('cpp int main is not noise',     () => assert.strictEqual(isNoiseLine('int main() {', 'cpp'), false));
     });
 });
 

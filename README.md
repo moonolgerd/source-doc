@@ -18,7 +18,7 @@ A VS Code extension that explains source code **line-by-line, block-by-block, or
 - **Toggle mode** between `block`, `line`, `both`, `file`, and `none` via the status bar or command palette.
 - **Generated files are skipped** — no lenses on `*.d.ts`, `*.g.cs`, `*.min.js`, etc.
 - **LRU cache** — repeated requests for the same code never hit the API twice.
-- Supports **TypeScript, TSX, JavaScript, JSX, C#, XAML**.
+- Supports **TypeScript, TSX, JavaScript, JSX, C#, XAML, Python, Java, Go, Kotlin, Dart, Swift, Rust, C, and C++** out of the box — add any VS Code language ID via `sourceDoc.languages`.
 
 ---
 
@@ -33,7 +33,7 @@ A VS Code extension that explains source code **line-by-line, block-by-block, or
 
 1. **Clone / open** this folder in VS Code.
 2. Run `npm install` then press **F5** to launch the Extension Development Host.
-3. Open any supported file (`.ts`, `.tsx`, `.js`, `.jsx`, `.cs`, `.xaml`).
+3. Open any supported file (`.ts`, `.tsx`, `.js`, `.jsx`, `.cs`, `.xaml`, `.py`, `.java`, `.go`, `.kt`, `.dart`, `.swift`, `.rs`, `.c`, `.cpp`, …).
 4. CodeLens markers appear above each block — click **`$(comment) Explain block`**, **`$(comment) Explain line`**, or **`$(comment) Explain file`**.
 5. Ghost text with the explanation appears at the end of the line.
 
@@ -58,7 +58,7 @@ A VS Code extension that explains source code **line-by-line, block-by-block, or
 |---|---|---|---|
 | `sourceDoc.enabled` | `boolean` | `true` | Enable or disable all CodeLens markers |
 | `sourceDoc.mode` | `"block"` \| `"line"` \| `"both"` \| `"file"` \| `"none"` | `"block"` | Granularity of CodeLens markers |
-| `sourceDoc.languages` | `string[]` | `["typescript","typescriptreact","javascript","javascriptreact","csharp","xaml"]` | Language IDs to activate on |
+| `sourceDoc.languages` | `string[]` | `["typescript","typescriptreact","javascript","javascriptreact","csharp","xaml","python","java","go","kotlin","dart","swift","rust","c","cpp"]` | Language IDs to activate on |
 | `sourceDoc.modelFamily` | `string` | `"gpt-4o"` | GitHub Copilot model family to use |
 | `sourceDoc.maxExplanationLength` | `number` | `160` | Max characters of ghost text (40–400) |
 

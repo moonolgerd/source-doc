@@ -59,7 +59,7 @@ description: Implementation task list for the Source Doc VS Code extension
   - [x] Dynamic re-registration on `sourceDoc.languages` config change.
   - [x] Register 6 commands: `explainLine`, `explainBlock`, `explainFile`, `toggleMode`, `clearExplanations`, `refreshLenses`.
   - [x] `runExplain()`: reconstruct `vscode.Uri` from JSON-serialised args; find editor; show cancellable progress; call `ExplanationProvider`; apply via `DecorationManager`.
-  - [x] `explainFile` command: collect non-noise lines; explain all in parallel via `Promise.allSettled`; apply decorations as each resolves; progress shows `N / total done`; aggregate errors shown as single message.
+  - [x] `explainFile` command: collect non-noise lines; explain all concurrently via `runWithConcurrency(lines, 5, ...)` (max 5 in-flight); apply decorations as each resolves; progress shows `N / total done`; show first error with total count.
   - [x] Hover provider registered for `{ scheme: 'file' }` — returns full explanation when `DecorationManager.getFullExplanation()` indicates text was truncated.
   - [x] `toggleMode` cycles `block → line → both → file → none → block`.
   - [x] `deactivate()`: no-op (subscriptions handle cleanup).
@@ -73,6 +73,12 @@ description: Implementation task list for the Source Doc VS Code extension
   - [x] Add `typescriptreact` and `xaml` to default `sourceDoc.languages` and `activationEvents`.
   - [x] Add XAML PascalCase element regex and multi-line context capture in `regexBlockLenses()`.
   - [x] Add `typescriptreact`, `javascriptreact`, `xaml` labels to `languageLabel()` in `util.ts`.
+
+- [x] <!-- task:T15 --> Extend language support (Python, Java, Go, Kotlin, Dart, Swift, Rust, C, C++)
+  - [x] Add `python`, `java`, `go`, `kotlin`, `dart`, `swift`, `rust`, `c`, `cpp` to `sourceDoc.languages` default and `activationEvents` in `package.json`.
+  - [x] Extend `isNoiseLine` import-directive regex with `from\s+\w` (Python `from x import`) and `use\s+[\w:*{]` (Rust `use`) alternatives.
+  - [x] Add `python`, `java`, `go`, `kotlin`, `dart`, `swift`, `rust`, `c`, `cpp` labels to `languageLabel()` in `util.ts`.
+  - [x] Add import-noise and real-code test cases for all new languages in `codeLensProvider.test.ts`.
 
 - [x] <!-- task:T10 --> Project hygiene & documentation
   - [x] `.gitignore` with full Node.js template.
@@ -112,3 +118,8 @@ description: Implementation task list for the Source Doc VS Code extension
   - [x] Update `.vscodeignore` to exclude `.github/`, `.copilot-specs-cache/`, `CONTRIBUTING.md` from VSIX.
   - [x] Run `vsce package --no-dependencies` — produces `source-doc-0.1.0.vsix` (19 files, 24 KB, no warnings).
   - [x] Publish via `vsce publish` — requires a Personal Access Token from the VS Code Marketplace publisher portal.
+
+- [ ] <!-- task:T16 --> Release v0.3.0
+  - [ ] Confirm `npm test` passes.
+  - [ ] Run `vsce package --no-dependencies` and verify VSIX contains no unexpected files.
+  - [ ] Tag `v0.3.0` and push — triggers `release.yml` to publish to the VS Code Marketplace.
