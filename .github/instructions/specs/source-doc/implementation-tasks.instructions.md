@@ -118,8 +118,3 @@ description: Implementation task list for the Source Doc VS Code extension
   - [x] Update `.vscodeignore` to exclude `.github/`, `.copilot-specs-cache/`, `CONTRIBUTING.md` from VSIX.
   - [x] Run `vsce package --no-dependencies` — produces `source-doc-0.1.0.vsix` (19 files, 24 KB, no warnings).
   - [x] Publish via `vsce publish` — requires a Personal Access Token from the VS Code Marketplace publisher portal.
-
-- [ ] <!-- task:T16 --> Release v0.3.0
-  - [ ] Confirm `npm test` passes.
-  - [ ] Run `vsce package --no-dependencies` and verify VSIX contains no unexpected files.
-  - [ ] Tag `v0.3.0` and push — triggers `release.yml` to publish to the VS Code Marketplace.
