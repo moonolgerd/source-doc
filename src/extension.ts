@@ -30,7 +30,13 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 
     // ── Register CodeLens provider for each configured language ──────────────
-    registerCodeLensProviders(context, codeLensProvider);
+    // Track ALL registrations in languageRegistrations (not context.subscriptions)
+    // so the full set can be disposed when sourceDoc.languages changes.
+    let languageRegistrations: vscode.Disposable[] = [];
+    registerCodeLensProviders(codeLensProvider, languageRegistrations);
+
+    // Dispose the language registrations when the extension is deactivated.
+    context.subscriptions.push({ dispose: () => languageRegistrations.forEach(d => d.dispose()) });
 
     // Refresh lenses when the user switches to a different editor tab
     context.subscriptions.push(
@@ -43,14 +49,12 @@ export function activate(context: vscode.ExtensionContext): void {
     );
 
     // Re-register providers when sourceDoc.languages changes
-    let languageRegistrations: vscode.Disposable[] = [];
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(e => {
             if (e.affectsConfiguration('sourceDoc.languages')) {
                 languageRegistrations.forEach(d => d.dispose());
                 languageRegistrations = [];
-                registerCodeLensProviders(context, codeLensProvider, languageRegistrations);
-                languageRegistrations.forEach(d => context.subscriptions.push(d));
+                registerCodeLensProviders(codeLensProvider, languageRegistrations);
             }
         }),
     );
@@ -206,9 +210,8 @@ export function deactivate(): void {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function registerCodeLensProviders(
-    context: vscode.ExtensionContext,
     provider: SourceDocCodeLensProvider,
-    into: vscode.Disposable[] = context.subscriptions as unknown as vscode.Disposable[],
+    into: vscode.Disposable[],
 ): void {
     const config = vscode.workspace.getConfiguration('sourceDoc');
     const languages = config.get<string[]>('languages') ?? [
