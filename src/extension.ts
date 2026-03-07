@@ -50,6 +50,7 @@ export function activate(context: vscode.ExtensionContext): void {
                 languageRegistrations.forEach(d => d.dispose());
                 languageRegistrations = [];
                 registerCodeLensProviders(context, codeLensProvider, languageRegistrations);
+                languageRegistrations.forEach(d => context.subscriptions.push(d));
             }
         }),
     );
@@ -151,6 +152,11 @@ export function activate(context: vscode.ExtensionContext): void {
                     if (!isNoiseLine(trimmed, doc.languageId)) {
                         lines.push({ line: i, code: trimmed });
                     }
+                }
+
+                if (lines.length === 0) {
+                    vscode.window.showInformationMessage('Source Doc: nothing to explain in this file.');
+                    return;
                 }
 
                 await vscode.window.withProgress(
