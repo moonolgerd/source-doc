@@ -76,12 +76,29 @@ export class ExplanationProvider implements vscode.Disposable {
             }
         } catch (err) {
             if (err instanceof vscode.LanguageModelError) {
-                throw new Error(`Copilot error (${err.code}): ${err.message}`);
+                switch (err.code) {
+                    case 'NoPermissions':
+                        throw new Error(`Copilot error (${err.code}): access denied. Please check your GitHub Copilot subscription.`);
+                    case 'Blocked':
+                        throw new Error(`Copilot error (${err.code}): request was blocked. Please check your GitHub Copilot settings.`);
+                    case 'NotFound':
+                        throw new Error(`Copilot error (${err.code}): model not found. Please check your GitHub Copilot extension.`);
+                    case 'RequestFailed':
+                        throw new Error(`Copilot error (${err.code}): request failed. Please try again.`);
+                    default:
+                        throw new Error(`Copilot error (${err.code}): ${err.message}. Please check your GitHub Copilot extension.`);
+                }
             }
             throw err;
         }
 
         result = result.trim();
+        if (token.isCancellationRequested) {
+            throw new vscode.CancellationError();
+        }
+        if (!result) {
+            throw new Error('Copilot returned an empty explanation. Please try again.');
+        }
         this.addToCache(key, result);
         return result;
     }

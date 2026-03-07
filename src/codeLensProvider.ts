@@ -91,7 +91,9 @@ export class SourceDocCodeLensProvider implements vscode.CodeLensProvider {
         }
 
         const lenses: vscode.CodeLens[] = [];
-        const firstRange = new vscode.Range(0, 0, 0, document.lineAt(0).text.length);
+        const firstRange = document.lineCount > 0
+            ? new vscode.Range(0, 0, 0, document.lineAt(0).text.length)
+            : new vscode.Range(0, 0, 0, 0);
 
         // File-level lens at line 0 — always shown (except 'none')
         lenses.push(
@@ -187,7 +189,7 @@ export class SourceDocCodeLensProvider implements vscode.CodeLensProvider {
         // For code languages: match function/class/method/def/fn declarations.
         const CODE_RE = /^[ \t]*((?:export\s+)?(?:default\s+)?(?:async\s+)?function[\s*]+\w+|(?:export\s+)?(?:abstract\s+|sealed\s+)?class\s+\w+|(?:export\s+)?(?:abstract\s+)?interface\s+\w+|(?:export\s+)?(?:const|let|var)\s+\w+\s*=\s*(?:async\s*)?(?:\([^)]*\)|\w+)\s*=>|(?:public|private|protected|internal)(?:\s+(?:static|override|virtual|abstract|async|readonly))*\s+\S+\s+\w+\s*[({]|def\s+\w+\s*\(|fn\s+\w+\s*[(<]|func\s+\w+\s*[(<])/;
 
-        const RE = isXml ? XAML_RE : CODE_RE;;
+        const RE = isXml ? XAML_RE : CODE_RE;
 
         // In block mode, pass the full element/function text as context.
         // For XAML, capture from the opening tag to the matching close or end-of-line.
